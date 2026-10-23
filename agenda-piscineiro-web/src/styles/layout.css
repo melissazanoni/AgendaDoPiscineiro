@@ -1,0 +1,124 @@
+/* ---------- Cabeçalho (barra branca do protótipo) ---------- */
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  height: 76px;
+  background: var(--white);
+  border-bottom: 1px solid var(--border-soft);
+}
+
+.topbar__inner {
+  height: 100%;
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 0 40px;
+  display: flex;
+  align-items: center;
+  gap: 40px;
+}
+
+.brand {
+  font-size: 25px;
+  font-weight: 700;
+  color: var(--navy);
+  white-space: nowrap;
+}
+
+.nav { display: flex; gap: 6px; flex: 1; }
+
+.nav__link {
+  height: 40px;
+  padding: 0 16px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--muted);
+  border-radius: 10px;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+.nav__link:hover { color: var(--navy); background: var(--bg); }
+.nav__link.active { color: var(--navy); background: var(--tint); }
+
+.user {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.user__name { font-weight: 600; color: var(--text); }
+
+/* ---------- Área das páginas ---------- */
+.page {
+  max-width: 1440px;
+  margin: 0 auto;
+  padding: 44px 40px 64px;
+}
+
+.page--narrow { max-width: 840px; }   /* formulários (frames de 760px) */
+.page--medium { max-width: 945px; }   /* pagamentos (frames de 865px) */
+.page--details { max-width: 1180px; } /* detalhes do agendamento (1100px) */
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 32px;
+}
+
+.back-link { margin-top: 24px; }
+
+/* ---------- Telas de login / cadastro ---------- */
+.auth {
+  min-height: calc(100vh - 76px);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 68px 16px;
+}
+
+.auth--no-header { min-height: 100vh; padding-top: 94px; }
+
+.auth-card {
+  width: 460px;
+  max-width: 100%;
+  padding: 40px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+}
+
+.auth-card--slim { width: 382px; padding: 36px 24px 48px; border-radius: 18px; min-height: 560px; }
+
+.auth-card__brand { font-size: 24px; font-weight: 700; color: var(--navy); margin-bottom: 34px; }
+
+.auth-card__header { margin-bottom: 32px; }
+
+.auth-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 22px;
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.soft-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 34px;
+  margin-top: 40px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--blue);
+  background: #e6fbfa;
+  border-radius: 17px;
+}
+
+.soft-button:hover { background: #d6f6f4; }
