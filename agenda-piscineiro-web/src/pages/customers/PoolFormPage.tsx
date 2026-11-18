@@ -2,7 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { customersApi, poolsApi, type PoolInput } from '../../api/endpoints';
 import type { CustomerType, PoolFeatures, PoolType } from '../../api/types';
-import { Alert, Field, Loading, RadioGroup, SelectField } from '../../components/ui';
+import { Alert, DateField, Field, Loading, RadioGroup, SelectField } from '../../components/ui';
 import { useSubmit } from '../../hooks/useForm';
 import {
   CUSTOMER_TYPE_LABELS, POOL_TYPE_LABELS, formatDecimal, parseDecimal, todayIso,
@@ -195,8 +195,8 @@ export function PoolFormPage() {
           options={Object.entries(CUSTOMER_TYPE_LABELS).map(([value, label]) => ({ value, label }))}
         />
 
-        <Field label="Última troca de areia" name="last_sand_change" type="date" max={todayIso()}
-          value={sandChange} onChange={(e) => setSandChange(e.target.value)} error={f.last_sand_change} />
+        <DateField label="Última troca de areia" name="last_sand_change" max={todayIso()}
+          value={sandChange} onChange={setSandChange} error={f.last_sand_change} />
 
         <div className="form-section">
           <p className="section-title">Endereço</p>

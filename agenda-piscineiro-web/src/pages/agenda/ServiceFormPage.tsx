@@ -3,7 +3,7 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import { customersApi, servicesApi } from '../../api/endpoints';
 import type { Customer, Pool, ServiceFrequency } from '../../api/types';
 import { CustomerPicker } from '../../components/CustomerPicker';
-import { Alert, Field, Loading, RadioGroup, SelectField } from '../../components/ui';
+import { Alert, DateField, Field, Loading, RadioGroup, SelectField } from '../../components/ui';
 import { useSubmit } from '../../hooks/useForm';
 import { FREQUENCY_LABELS, formatDate, plural, todayIso } from '../../utils/format';
 
@@ -147,9 +147,9 @@ export function ServiceFormPage() {
           )
         )}
 
-        <Field
-          label="Data" name="scheduled_date" type="date" min={todayIso()}
-          value={date} onChange={(e) => setDate(e.target.value)} error={fieldErrors.scheduled_date}
+        <DateField
+          label="Data" name="scheduled_date" min={todayIso()}
+          value={date} onChange={setDate} error={fieldErrors.scheduled_date}
         />
         <Field
           label="Descrição" name="description" placeholder="Ex.: Limpeza completa da piscina" maxLength={500}

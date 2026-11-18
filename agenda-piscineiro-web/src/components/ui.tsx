@@ -1,5 +1,6 @@
 // Componentes visuais reutilizados em várias telas.
-import type { InputHTMLAttributes, ReactNode, SelectHTMLAttributes } from 'react';
+import { useEffect, useRef, useState, type InputHTMLAttributes, type ReactNode, type SelectHTMLAttributes } from 'react';
+import { formatDate, maskDate, parseBrDate } from '../utils/format';
 
 // ---------- Campo de texto com rótulo e erro ----------
 type FieldProps = InputHTMLAttributes<HTMLInputElement> & {
@@ -19,6 +20,87 @@ export function Field({ label, error, id, className, ...props }: FieldProps) {
         {...props}
       />
       {error && <span className="field-error">{error}</span>}
+    </div>
+  );
+}
+
+// ---------- Campo de data (sempre DD/MM/AAAA, independente do idioma do navegador) ----------
+type DateFieldProps = {
+  label: string;
+  name: string;
+  /** Valor no formato da API: 'AAAA-MM-DD' ('' se vazio ou incompleto). */
+  value: string;
+  onChange: (iso: string) => void;
+  min?: string;
+  max?: string;
+  error?: string;
+  required?: boolean;
+  disabled?: boolean;
+  className?: string;
+};
+
+export function DateField({ label, name, value, onChange, min, max, error, required, disabled, className }: DateFieldProps) {
+  const [text, setText] = useState(value ? formatDate(value) : '');
+  const [localError, setLocalError] = useState<string | undefined>();
+  const lastEmitted = useRef(value);
+  const pickerRef = useRef<HTMLInputElement>(null);
+
+  // Valor alterado de fora (ex.: carregamento na edição)
+  useEffect(() => {
+    if (value !== lastEmitted.current) {
+      lastEmitted.current = value;
+      setText(value ? formatDate(value) : '');
+      setLocalError(undefined);
+    }
+  }, [value]);
+
+  const emit = (iso: string) => {
+    lastEmitted.current = iso;
+    onChange(iso);
+  };
+
+  const handleText = (raw: string) => {
+    const masked = maskDate(raw);
+    setText(masked);
+    setLocalError(undefined);
+    emit(parseBrDate(masked));
+  };
+
+  const handleBlur = () => {
+    if (text && !parseBrDate(text)) setLocalError('Data inválida (use DD/MM/AAAA).');
+  };
+
+  const openPicker = () => {
+    const el = pickerRef.current;
+    if (!el) return;
+    try { el.showPicker(); } catch { el.focus(); }
+  };
+
+  const shownError = localError ?? error;
+  return (
+    <div className={`field ${className ?? ''}`}>
+      <label className="label" htmlFor={name}>{label}</label>
+      <div className="date-input">
+        <input
+          id={name} name={name} type="text" inputMode="numeric" placeholder="DD/MM/AAAA" maxLength={10}
+          autoComplete="off" required={required} disabled={disabled}
+          className={`input ${shownError ? 'input--error' : ''}`} aria-invalid={Boolean(shownError)}
+          value={text} onChange={(e) => handleText(e.target.value)} onBlur={handleBlur}
+        />
+        <button type="button" className="date-input__btn" onClick={openPicker} disabled={disabled}
+          aria-label={`Abrir calendário: ${label}`}>
+          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true">
+            <rect x="2" y="3.5" width="14" height="12.5" rx="2" fill="none" stroke="currentColor" strokeWidth="1.5" />
+            <path d="M2 7.5h14M6 1.8v3.4M12 1.8v3.4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+          </svg>
+        </button>
+        <input
+          ref={pickerRef} type="date" name={name} className="date-input__picker" tabIndex={-1} aria-hidden="true"
+          min={min} max={max} value={value}
+          onChange={(e) => { setText(e.target.value ? formatDate(e.target.value) : ''); setLocalError(undefined); emit(e.target.value); }}
+        />
+      </div>
+      {shownError && <span className="field-error">{shownError}</span>}
     </div>
   );
 }

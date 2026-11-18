@@ -23,6 +23,21 @@ const parseIso = (iso: string) => {
 /** '2026-10-25' -> '25/10/2026' */
 export const formatDate = (iso: string | null) => (iso ? iso.split('-').reverse().join('/') : '—');
 
+/** Máscara enquanto digita: 25102026 -> 25/10/2026 */
+export function maskDate(text: string): string {
+  const d = text.replace(/\D/g, '').slice(0, 8);
+  return d.replace(/^(\d{2})(\d)/, '$1/$2').replace(/^(\d{2})\/(\d{2})(\d)/, '$1/$2/$3');
+}
+
+/** '25/10/2026' -> '2026-10-25' ('' se incompleta ou inexistente, ex.: 31/02) */
+export function parseBrDate(text: string): string {
+  const m = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(text);
+  if (!m) return '';
+  const iso = `${m[3]}-${m[2]}-${m[1]}`;
+  const d = parseIso(iso);
+  return toIsoDate(d) === iso ? iso : '';
+}
+
 const MONTHS = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho',
   'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
 const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];

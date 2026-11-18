@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { chargesApi, customersApi } from '../../api/endpoints';
 import type { ChargeFrequency, Customer } from '../../api/types';
 import { CustomerPicker } from '../../components/CustomerPicker';
-import { Alert, Field, RadioGroup } from '../../components/ui';
+import { Alert, DateField, Field, RadioGroup } from '../../components/ui';
 import { useSubmit } from '../../hooks/useForm';
 import { parseMoney } from '../../utils/format';
 
@@ -62,9 +62,9 @@ export function NewPaymentPage() {
             label="Valor do Serviço / Mensalidade (R$)" name="amount" inputMode="decimal" placeholder="Ex: 130,00"
             value={amount} onChange={(e) => setAmount(e.target.value)} error={fieldErrors.amount}
           />
-          <Field
-            label="Data da Cobrança" name="due_date" type="date"
-            value={dueDate} onChange={(e) => setDueDate(e.target.value)} error={fieldErrors.due_date}
+          <DateField
+            label="Data da Cobrança" name="due_date"
+            value={dueDate} onChange={setDueDate} error={fieldErrors.due_date}
           />
         </div>
 

@@ -34,7 +34,7 @@ z.setErrorMap((issue, ctx) => {
 // ---------- Peças reutilizáveis ----------
 export const idSchema = z.number().int().positive();
 
-export const dateString = z.string().refine(isValidDate, 'Data inválida (use AAAA-MM-DD).');
+export const dateString = z.string().refine(isValidDate, 'Data inválida.');
 
 export const timeString = z
   .string()
