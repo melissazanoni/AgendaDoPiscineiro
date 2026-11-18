@@ -33,7 +33,7 @@ export async function update(req: Request, res: Response): Promise<void> {
   const data = customerSchema.parse(req.body);
 
   await withTransaction(async (tx) => {
-    const addressId = await repo.findCustomerById(pool, req.userId!, id);
+    const addressId = await repo.findCustomerAddressId(tx, req.userId!, id);
     if (!addressId) throw notFound();
     await repo.updateCustomer(tx, id, addressId, data);
   });
@@ -45,14 +45,14 @@ export async function remove(req: Request, res: Response): Promise<void> {
   const id = parseId(req.params.id);
 
   await withTransaction(async (tx) => {
-    if (!(await repo.findCustomerAddressId(tx, req.userId!, id)))
+    if (!(await repo.findCustomerAddressId(tx, req.userId!, id))) throw notFound();
     if (await repo.customerHasServices(tx, id)) {
       throw new AppError('Não é possível excluir: o cliente possui serviços cadastrados.', 409);
     }
     if (await repo.customerHasCharges(tx, id)) {
       throw new AppError('Não é possível excluir: o cliente possui cobranças cadastradas.', 409);
     }
-    const addressIds = await repo.listCustomerAddressIds(tx, id);
+    const addressIds = await repo.listCustomerAddressIds(tx, req.userId!, id);
     await repo.deleteCustomer(tx, id);
     await deleteOrphanAddresses(tx, addressIds);
   });

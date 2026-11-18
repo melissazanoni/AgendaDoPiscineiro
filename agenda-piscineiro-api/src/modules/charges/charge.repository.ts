@@ -9,23 +9,28 @@ const SELECT_CHARGE = `
   FROM charges ch
   JOIN customers c ON c.customer_id = ch.customer_id`;
 
+// $6 é sempre o usuário logado (só enxerga cobranças dos próprios clientes)
 const FILTER = `
-  WHERE ($2::int IS NULL OR ch.customer_id = $2)
+  WHERE c.user_id = $6
+    AND ($2::int IS NULL OR ch.customer_id = $2)
     AND ($3::payment_status_enum IS NULL OR ch.payment_status = $3)
     AND ($4::date IS NULL OR ch.due_date >= $4)
     AND ($5::date IS NULL OR ch.due_date <= $5)`;
 
-const filterParams = (today: string, f: ChargeFilters) =>
-  [today, f.customer_id ?? null, f.status ?? null, f.from ?? null, f.to ?? null];
+const filterParams = (userId: number, today: string, f: ChargeFilters) =>
+  [today, f.customer_id ?? null, f.status ?? null, f.from ?? null, f.to ?? null, userId];
 
-/** RF08 / RF09 - Lista de cobranças com filtros */
-export async function listCharges(db: Db, today: string, f: ChargeFilters) {
-  const { rows } = await db.query(`${SELECT_CHARGE} ${FILTER} ORDER BY ch.due_date DESC, ch.charge_id DESC`, filterParams(today, f));
+/** RF08 / RF09 - Lista de cobranças do usuário com filtros */
+export async function listCharges(db: Db, userId: number, today: string, f: ChargeFilters) {
+  const { rows } = await db.query(
+    `${SELECT_CHARGE} ${FILTER} ORDER BY ch.due_date DESC, ch.charge_id DESC`,
+    filterParams(userId, today, f),
+  );
   return rows;
 }
 
 /** Totais do histórico financeiro, com os mesmos filtros da lista */
-export async function summarizeCharges(db: Db, today: string, f: ChargeFilters) {
+export async function summarizeCharges(db: Db, userId: number, today: string, f: ChargeFilters) {
   const { rows } = await db.query(
     `SELECT COUNT(*)::int                                                          AS count,
             COALESCE(SUM(ch.amount), 0)                                            AS total_amount,
@@ -33,21 +38,29 @@ export async function summarizeCharges(db: Db, today: string, f: ChargeFilters) 
             COALESCE(SUM(ch.amount) FILTER (WHERE ch.payment_status = 'pendente'), 0) AS pending_amount,
             COALESCE(SUM(ch.amount) FILTER (WHERE ch.payment_status = 'pendente' AND ch.due_date < $1::date), 0)
                                                                                    AS overdue_amount
-     FROM charges ch ${FILTER}`,
-    filterParams(today, f),
+     FROM charges ch
+     JOIN customers c ON c.customer_id = ch.customer_id
+     ${FILTER}`,
+    filterParams(userId, today, f),
   );
   return rows[0];
 }
 
-export async function findChargeById(db: Db, today: string, id: number) {
-  const { rows } = await db.query(`${SELECT_CHARGE} WHERE ch.charge_id = $2`, [today, id]);
+export async function findChargeById(db: Db, userId: number, today: string, id: number) {
+  const { rows } = await db.query(
+    `${SELECT_CHARGE} WHERE c.user_id = $2 AND ch.charge_id = $3`,
+    [today, userId, id],
+  );
   return rows[0];
 }
 
-export async function findChargeStatus(db: Db, id: number): Promise<'pendente' | 'pago' | undefined> {
+/** Status da cobrança, só se ela for de um cliente do usuário (também serve para checar se é dele). */
+export async function findChargeStatus(db: Db, userId: number, id: number): Promise<'pendente' | 'pago' | undefined> {
   const { rows } = await db.query<{ payment_status: 'pendente' | 'pago' }>(
-    'SELECT payment_status FROM charges WHERE charge_id = $1',
-    [id],
+    `SELECT ch.payment_status FROM charges ch
+     JOIN customers c ON c.customer_id = ch.customer_id
+     WHERE c.user_id = $1 AND ch.charge_id = $2`,
+    [userId, id],
   );
   return rows[0]?.payment_status;
 }

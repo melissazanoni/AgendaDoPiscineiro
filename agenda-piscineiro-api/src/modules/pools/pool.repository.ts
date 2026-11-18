@@ -26,12 +26,13 @@ export async function listPools(db: Db, userId: number, customerId?: number) {
     [userId, customerId ?? null],
   );
   return rows;
-}  
+}
 
 export async function findPoolById(db: Db, userId: number, id: number) {
   const { rows } = await db.query(`${SELECT_POOL} WHERE c.user_id = $1 AND p.pool_id = $2`, [userId, id]);
   return rows[0];
 }
+
 /** Endereço atual da piscina e endereço do dono (para saber se são compartilhados). */
 export async function findPoolAddressInfo(db: Db, userId: number, id: number) {
   const { rows } = await db.query<{ address_id: number; customer_address_id: number }>(
@@ -39,6 +40,7 @@ export async function findPoolAddressInfo(db: Db, userId: number, id: number) {
      FROM pools p JOIN customers c ON c.customer_id = p.customer_id
      WHERE c.user_id = $1 AND p.pool_id = $2`,
     [userId, id],
+  );
   return rows[0];
 }
 

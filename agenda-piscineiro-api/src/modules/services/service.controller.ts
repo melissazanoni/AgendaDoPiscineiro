@@ -79,7 +79,7 @@ export async function update(req: Request, res: Response): Promise<void> {
   }
 
   const data = updateServiceSchema.parse(req.body);
-  await validateSchedule(data.customer_id, data.pool_id, [data.scheduled_date], data.scheduled_time, id);
+  await validateSchedule(req.userId!, data.customer_id, data.pool_id, [data.scheduled_date], data.scheduled_time, id);
   await repo.updateService(pool, id, data);
   res.json(await repo.findServiceById(pool, req.userId!, id));
 }

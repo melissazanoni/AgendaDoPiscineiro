@@ -95,6 +95,7 @@ export async function poolBelongsToCustomer(db: Db, userId: number, poolId: numb
      WHERE p.pool_id = $1 AND p.customer_id = $2 AND c.user_id = $3`,
     [poolId, customerId, userId],
   );
+  return (rowCount ?? 0) > 0;
 }
 
 /** RN04 - Datas em que o horário já está ocupado por outro serviço não cancelado DO MESMO usuário */
