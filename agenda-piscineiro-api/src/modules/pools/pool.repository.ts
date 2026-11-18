@@ -18,27 +18,27 @@ const SELECT_POOL = `
   JOIN customers c ON c.customer_id = p.customer_id
   JOIN addresses a ON a.address_id = p.address_id`;
 
-export async function listPools(db: Db, customerId?: number) {
+export async function listPools(db: Db, userId: number, customerId?: number) {
   const { rows } = await db.query(
-    `${SELECT_POOL} WHERE $1::int IS NULL OR p.customer_id = $1 ORDER BY c.name, p.description`,
-    [customerId ?? null],
+    `${SELECT_POOL}
+     WHERE c.user_id = $1 AND ($2::int IS NULL OR p.customer_id = $2)
+     ORDER BY c.name, p.description`,
+    [userId, customerId ?? null],
   );
   return rows;
-}
+}  
 
-export async function findPoolById(db: Db, id: number) {
-  const { rows } = await db.query(`${SELECT_POOL} WHERE p.pool_id = $1`, [id]);
+export async function findPoolById(db: Db, userId: number, id: number) {
+  const { rows } = await db.query(`${SELECT_POOL} WHERE c.user_id = $1 AND p.pool_id = $2`, [userId, id]);
   return rows[0];
 }
-
 /** Endereço atual da piscina e endereço do dono (para saber se são compartilhados). */
-export async function findPoolAddressInfo(db: Db, id: number) {
+export async function findPoolAddressInfo(db: Db, userId: number, id: number) {
   const { rows } = await db.query<{ address_id: number; customer_address_id: number }>(
     `SELECT p.address_id, c.address_id AS customer_address_id
      FROM pools p JOIN customers c ON c.customer_id = p.customer_id
-     WHERE p.pool_id = $1`,
-    [id],
-  );
+     WHERE c.user_id = $1 AND p.pool_id = $2`,
+    [userId, id],
   return rows[0];
 }
 

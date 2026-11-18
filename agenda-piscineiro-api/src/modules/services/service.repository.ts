@@ -33,71 +33,84 @@ export type ServiceFilters = {
   to?: string;
 };
 
-export async function listServices(db: Db, f: ServiceFilters) {
+export async function listServices(db: Db, userId: number, f: ServiceFilters) {
   const { rows } = await db.query(
     `${SELECT_SERVICE}
-     WHERE ($1::service_status_enum IS NULL OR s.status = $1)
+     WHERE c.user_id = $6
+       AND ($1::service_status_enum IS NULL OR s.status = $1)
        AND ($2::int IS NULL OR s.customer_id = $2)
        AND ($3::int IS NULL OR s.pool_id = $3)
        AND ($4::date IS NULL OR s.scheduled_date >= $4)
        AND ($5::date IS NULL OR s.scheduled_date <= $5)
      ${ORDER}`,
-    [f.status ?? null, f.customer_id ?? null, f.pool_id ?? null, f.from ?? null, f.to ?? null],
+    [f.status ?? null, f.customer_id ?? null, f.pool_id ?? null, f.from ?? null, f.to ?? null, userId],
   );
   return rows;
 }
 
 /** RF06 / RF12 - Serviços agendados a partir de agora */
-export async function listUpcoming(db: Db, nowDate: string, nowTime: string, until: string | null, limit: number) {
+export async function listUpcoming(
+  db: Db, userId: number, nowDate: string, nowTime: string, until: string | null, limit: number,
+) {
   const { rows } = await db.query(
     `${SELECT_SERVICE}
-     WHERE s.status = 'agendado'
+     WHERE c.user_id = $5
+       AND s.status = 'agendado'
        AND (s.scheduled_date > $1 OR (s.scheduled_date = $1 AND s.scheduled_time >= $2))
        AND ($3::date IS NULL OR s.scheduled_date <= $3)
      ${ORDER}
      LIMIT $4`,
-    [nowDate, nowTime, until, limit],
+    [nowDate, nowTime, until, limit, userId],
   );
   return rows;
 }
 
-export async function findServiceById(db: Db, id: number) {
-  const { rows } = await db.query(`${SELECT_SERVICE} WHERE s.service_id = $1`, [id]);
+export async function findServiceById(db: Db, userId: number, id: number) {
+  const { rows } = await db.query(`${SELECT_SERVICE} WHERE c.user_id = $1 AND s.service_id = $2`, [userId, id]);
   return rows[0];
 }
 
-export async function findServicesByIds(db: Db, ids: number[]) {
-  const { rows } = await db.query(`${SELECT_SERVICE} WHERE s.service_id = ANY($1::int[]) ${ORDER}`, [ids]);
+export async function findServicesByIds(db: Db, userId: number, ids: number[]) {
+  const { rows } = await db.query(
+    `${SELECT_SERVICE} WHERE c.user_id = $1 AND s.service_id = ANY($2::int[]) ${ORDER}`,
+    [userId, ids],
+  );
   return rows;
 }
 
-export async function findServiceRow(db: Db, id: number): Promise<ServiceRow | undefined> {
+export async function findServiceRow(db: Db, userId: number, id: number): Promise<ServiceRow | undefined> {
   const { rows } = await db.query<ServiceRow>(
-    `SELECT service_id, customer_id, pool_id, status, scheduled_date, scheduled_time::text
-     FROM services WHERE service_id = $1`,
-    [id],
+    `SELECT s.service_id, s.customer_id, s.pool_id, s.status, s.scheduled_date, s.scheduled_time::text
+     FROM services s JOIN customers c ON c.customer_id = s.customer_id
+     WHERE c.user_id = $1 AND s.service_id = $2`,
+    [userId, id],
   );
   return rows[0];
 }
 
-/** RN01 - A piscina precisa pertencer ao cliente informado */
-export async function poolBelongsToCustomer(db: Db, poolId: number, customerId: number): Promise<boolean> {
-  const { rowCount } = await db.query('SELECT 1 FROM pools WHERE pool_id = $1 AND customer_id = $2', [poolId, customerId]);
-  return (rowCount ?? 0) > 0;
+/** RN01 - A piscina precisa pertencer ao cliente informado (e o cliente, ao usuário) */
+export async function poolBelongsToCustomer(db: Db, userId: number, poolId: number, customerId: number): Promise<boolean> {
+  const { rowCount } = await db.query(
+    `SELECT 1 FROM pools p JOIN customers c ON c.customer_id = p.customer_id
+     WHERE p.pool_id = $1 AND p.customer_id = $2 AND c.user_id = $3`,
+    [poolId, customerId, userId],
+  );
 }
 
-/** RN04 - Datas em que o horário já está ocupado por outro serviço não cancelado */
+/** RN04 - Datas em que o horário já está ocupado por outro serviço não cancelado DO MESMO usuário */
 export async function findScheduleConflicts(
-  db: Db, dates: string[], time: string, ignoreServiceId: number | null = null,
+  db: Db, userId: number, dates: string[], time: string, ignoreServiceId: number | null = null,
 ): Promise<string[]> {
   const { rows } = await db.query<{ scheduled_date: string }>(
-    `SELECT scheduled_date FROM services
-     WHERE status <> 'cancelado'
-       AND scheduled_time = $1
-       AND scheduled_date = ANY($2::date[])
-       AND ($3::int IS NULL OR service_id <> $3)
-     ORDER BY scheduled_date`,
-    [time, dates, ignoreServiceId],
+    `SELECT s.scheduled_date FROM services s
+     JOIN customers c ON c.customer_id = s.customer_id
+     WHERE c.user_id = $4
+       AND s.status <> 'cancelado'
+       AND s.scheduled_time = $1
+       AND s.scheduled_date = ANY($2::date[])
+       AND ($3::int IS NULL OR s.service_id <> $3)
+     ORDER BY s.scheduled_date`,
+    [time, dates, ignoreServiceId, userId],
   );
   return rows.map((r) => r.scheduled_date);
 }

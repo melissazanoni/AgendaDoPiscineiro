@@ -5,7 +5,7 @@
 -- Dumped from database version 14.17 (Ubuntu 14.17-0ubuntu0.22.04.1)
 -- Dumped by pg_dump version 14.17 (Ubuntu 14.17-0ubuntu0.22.04.1)
 
--- Started on 2026-10-18 15:56:59 -03
+-- Started on 2026-10-23 20:25:41 -03
 
 SET statement_timeout = 0;
 SET lock_timeout = 0;
@@ -199,7 +199,8 @@ CREATE TABLE public.customers (
     name character varying(150) NOT NULL,
     phone character varying(20),
     document_type public.document_type_enum,
-    document_number character varying(18)
+    document_number character varying(18),
+    user_id integer NOT NULL
 );
 
 
@@ -344,7 +345,7 @@ ALTER TABLE ONLY public.addresses
 
 
 --
--- TOC entry 3280 (class 2606 OID 25974)
+-- TOC entry 3283 (class 2606 OID 25974)
 -- Name: charges charges_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -362,7 +363,16 @@ ALTER TABLE ONLY public.customers
 
 
 --
--- TOC entry 3276 (class 2606 OID 25934)
+-- TOC entry 3276 (class 2606 OID 25988)
+-- Name: customers customers_user_document_key; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.customers
+    ADD CONSTRAINT customers_user_document_key UNIQUE (user_id, document_number);
+
+
+--
+-- TOC entry 3279 (class 2606 OID 25934)
 -- Name: pools pools_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -371,7 +381,7 @@ ALTER TABLE ONLY public.pools
 
 
 --
--- TOC entry 3278 (class 2606 OID 25955)
+-- TOC entry 3281 (class 2606 OID 25955)
 -- Name: services services_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -398,7 +408,15 @@ ALTER TABLE ONLY public.users
 
 
 --
--- TOC entry 3286 (class 2606 OID 25975)
+-- TOC entry 3277 (class 1259 OID 25989)
+-- Name: customers_user_id_idx; Type: INDEX; Schema: public; Owner: postgres
+--
+
+CREATE INDEX customers_user_id_idx ON public.customers USING btree (user_id);
+
+
+--
+-- TOC entry 3290 (class 2606 OID 25975)
 -- Name: charges charges_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -407,7 +425,7 @@ ALTER TABLE ONLY public.charges
 
 
 --
--- TOC entry 3281 (class 2606 OID 25916)
+-- TOC entry 3284 (class 2606 OID 25916)
 -- Name: customers customers_address_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -416,7 +434,16 @@ ALTER TABLE ONLY public.customers
 
 
 --
--- TOC entry 3283 (class 2606 OID 25940)
+-- TOC entry 3285 (class 2606 OID 25982)
+-- Name: customers customers_user_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.customers
+    ADD CONSTRAINT customers_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.users(user_id) ON DELETE RESTRICT;
+
+
+--
+-- TOC entry 3287 (class 2606 OID 25940)
 -- Name: pools pools_address_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -425,7 +452,7 @@ ALTER TABLE ONLY public.pools
 
 
 --
--- TOC entry 3282 (class 2606 OID 25935)
+-- TOC entry 3286 (class 2606 OID 25935)
 -- Name: pools pools_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -434,7 +461,7 @@ ALTER TABLE ONLY public.pools
 
 
 --
--- TOC entry 3284 (class 2606 OID 25956)
+-- TOC entry 3288 (class 2606 OID 25956)
 -- Name: services services_customer_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -443,7 +470,7 @@ ALTER TABLE ONLY public.services
 
 
 --
--- TOC entry 3285 (class 2606 OID 25961)
+-- TOC entry 3289 (class 2606 OID 25961)
 -- Name: services services_pool_id_fkey; Type: FK CONSTRAINT; Schema: public; Owner: postgres
 --
 
@@ -451,7 +478,7 @@ ALTER TABLE ONLY public.services
     ADD CONSTRAINT services_pool_id_fkey FOREIGN KEY (pool_id) REFERENCES public.pools(pool_id) ON DELETE RESTRICT;
 
 
--- Completed on 2026-10-18 15:56:59 -03
+-- Completed on 2026-10-23 20:25:41 -03
 
 --
 -- PostgreSQL database dump complete

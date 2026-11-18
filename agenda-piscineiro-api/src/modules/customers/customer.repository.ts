@@ -9,42 +9,38 @@ const SELECT_CUSTOMER = `
   FROM customers c
   JOIN addresses a ON a.address_id = c.address_id`;
 
-/** RF11 - Lista de clientes (com busca opcional por nome, documento ou telefone) */
-export async function listCustomers(db: Db, search?: string) {
+/** RF11 - Lista de clientes do usuário (com busca opcional por nome, documento ou telefone) */
+export async function listCustomers(db: Db, userId: number, search?: string) {
   const { rows } = await db.query(
     `${SELECT_CUSTOMER}
-     WHERE $1::text IS NULL
-        OR c.name ILIKE '%' || $1 || '%'
-        OR c.document_number ILIKE '%' || $1 || '%'
-        OR c.phone ILIKE '%' || $1 || '%'
+     WHERE c.user_id = $1
+       AND ($2::text IS NULL
+        OR c.name ILIKE '%' || $2 || '%'
+        OR c.document_number ILIKE '%' || $2 || '%'
+        OR c.phone ILIKE '%' || $2 || '%')
      ORDER BY c.name`,
-    [search || null],
+    [userId, search || null],
   );
-  return rows;
-}
+} 
 
-export async function findCustomerById(db: Db, id: number) {
-  const { rows } = await db.query(`${SELECT_CUSTOMER} WHERE c.customer_id = $1`, [id]);
-  return rows[0];
-}
+export async function findCustomerById(db: Db, userId: number, id: number) {
+  const { rows } = await db.query(`${SELECT_CUSTOMER} WHERE c.user_id = $1 AND c.customer_id = $2`, [userId, id])};
 
-export async function findCustomerAddressId(db: Db, id: number): Promise<number | undefined> {
+/** Endereço do cliente, só se ele for do usuário (também serve para checar se o cliente é dele). */
+export async function findCustomerAddressId(db: Db, userId: number, id: number): Promise<number | undefined> {
   const { rows } = await db.query<{ address_id: number }>(
-    'SELECT address_id FROM customers WHERE customer_id = $1',
-    [id],
+    'SELECT address_id FROM customers WHERE user_id = $1 AND customer_id = $2',
+    [userId, id],
   );
-  return rows[0]?.address_id;
 }
 
-export async function insertCustomer(db: Db, data: CustomerInput): Promise<number> {
+export async function insertCustomer(db: Db, userId: number, data: CustomerInput): Promise<number> {
   const addressId = await insertAddress(db, data.address);
   const { rows } = await db.query<{ customer_id: number }>(
-    `INSERT INTO customers (address_id, name, phone, document_type, document_number)
-     VALUES ($1, $2, $3, $4, $5) RETURNING customer_id`,
-    [addressId, data.name, data.phone, data.document_type, data.document_number],
-  );
-  return rows[0].customer_id;
-}
+    `INSERT INTO customers (user_id, address_id, name, phone, document_type, document_number)
+     VALUES ($1, $2, $3, $4, $5, $6) RETURNING customer_id`,
+    [userId, addressId, data.name, data.phone, data.document_type, data.document_number],
+  }
 
 export async function updateCustomer(db: Db, id: number, addressId: number, data: CustomerInput): Promise<void> {
   await updateAddress(db, addressId, data.address);
@@ -56,13 +52,12 @@ export async function updateCustomer(db: Db, id: number, addressId: number, data
 }
 
 /** Endereços do cliente e das piscinas dele (para limpar após a exclusão). */
-export async function listCustomerAddressIds(db: Db, id: number): Promise<number[]> {
+export async function listCustomerAddressIds(db: Db, userId: number, id: number): Promise<number[] | undefined> {
   const { rows } = await db.query<{ address_id: number }>(
     `SELECT address_id FROM customers WHERE customer_id = $1
-     UNION SELECT address_id FROM pools WHERE customer_id = $1`,
-    [id],
+     UNION SELECT address_id FROM pools WHERE customer_id = $2`,
+    [userId, id],
   );
-  return rows.map((r) => r.address_id);
 }
 
 export async function customerHasServices(db: Db, id: number): Promise<boolean> {
