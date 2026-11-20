@@ -257,6 +257,17 @@ CREATE TABLE public.pools (
     has_timer boolean DEFAULT false NOT NULL,
     has_uv_treatment boolean DEFAULT false NOT NULL
 );
+
+ALTER TABLE public.pools OWNER TO postgres;
+
+ALTER TABLE public.pools ALTER COLUMN pool_id ADD GENERATED ALWAYS AS IDENTITY (
+    SEQUENCE NAME public.pools_pool_id_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1
+);
 --
 -- TOC entry 218 (class 1259 OID 25946)
 -- Name: services; Type: TABLE; Schema: public; Owner: postgres
