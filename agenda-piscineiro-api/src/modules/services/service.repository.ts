@@ -2,9 +2,10 @@ import { Db } from '../../config/db';
 import { addressJson } from '../addresses/address.repository';
 import { CreateServiceInput, UpdateServiceInput } from './service.schemas';
 
+
 const SELECT_SERVICE = `
   SELECT s.service_id, s.customer_id, c.name AS customer_name, c.phone AS customer_phone,
-         s.pool_id, p.description AS pool_description,
+         s.pool_id, p.description AS pool_description, p.filter_type,
          s.scheduled_date, to_char(s.scheduled_time, 'HH24:MI') AS scheduled_time,
          s.description, s.recurrence, s.recurrence_frequency, s.recurrence_months,
          s.status, s.execution_date,

@@ -24,6 +24,7 @@ export type Customer = {
 };
 
 export type PoolType = 'fibra' | 'vinil' | 'alvenaria' | 'azulejo' | 'pastilha';
+export type FilterType = 'areia' | 'zeolita' | 'cartucho' | 'bag' | 'diatomita';
 export type CustomerType =
   | 'residencia' | 'condominio' | 'sitio ou chacara' | 'clube' | 'hoteis e resorts' | 'academias';
 
@@ -44,6 +45,7 @@ export type Pool = PoolFeatures & {
   customer_name: string;
   description: string;
   pool_type: PoolType;
+  filter_type: FilterType;
   customer_type: CustomerType;
   width: number | null;
   length: number | null;
@@ -64,6 +66,7 @@ export type Service = {
   customer_phone: string | null;
   pool_id: number;
   pool_description: string;
+  filter_type: FilterType;
   scheduled_date: string; // AAAA-MM-DD
   scheduled_time: string; // HH:MM
   description: string;

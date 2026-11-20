@@ -4,10 +4,11 @@ import { PoolInput } from './pool.schemas';
 
 // Colunas gravadas a partir do formulário (nomes fixos, sem entrada do usuário)
 const POOL_COLUMNS = [
-  'description', 'pool_type', 'customer_type', 'width', 'length', 'depth', 'volume', 'last_sand_change',
+  'description', 'pool_type', 'filter_type', 'customer_type', 'width', 'length', 'depth', 'volume', 'last_sand_change',
   'has_heating', 'has_ozone_treatment', 'has_waterfall', 'has_hydromassage',
   'has_led_lighting', 'has_infinity_edge', 'has_timer', 'has_uv_treatment',
 ] as const;
+// Colunas gravadas a partir do formulário (nomes fixos, sem entrada do usuário)
 
 const SELECT_POOL = `
   SELECT p.pool_id, p.customer_id, c.name AS customer_name,

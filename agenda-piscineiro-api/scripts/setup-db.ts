@@ -17,7 +17,7 @@ async function main() {
       await client.query(await sqlFile('drop.sql'));
       console.log('Tabelas antigas removidas.');
     }
-    await client.query(await sqlFile('schema.sql'));
+    await client.query(await sqlFile('agendapiscineiro.sql'));
     console.log('Banco de dados criado com sucesso.');
   } finally {
     await client.end();

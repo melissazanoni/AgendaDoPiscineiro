@@ -94,6 +94,15 @@ ALTER TYPE public.pool_type_enum OWNER TO postgres;
 -- TOC entry 842 (class 1247 OID 25862)
 -- Name: service_frequency_enum; Type: TYPE; Schema: public; Owner: postgres
 --
+CREATE TYPE public.filter_type_enum AS ENUM (
+    'areia',
+    'zeolita',
+    'cartucho',
+    'bag',
+    'diatomita'
+);
+
+ALTER TYPE public.filter_type_enum OWNER TO postgres;
 
 CREATE TYPE public.service_frequency_enum AS ENUM (
     'semanal',
@@ -232,6 +241,7 @@ CREATE TABLE public.pools (
     address_id integer NOT NULL,
     description character varying(255) NOT NULL,
     pool_type public.pool_type_enum NOT NULL,
+    filter_type public.filter_type_enum DEFAULT 'areia'::public.filter_type_enum NOT NULL,
     customer_type public.customer_type_enum NOT NULL,
     width numeric(10,2),
     length numeric(10,2),
@@ -247,25 +257,6 @@ CREATE TABLE public.pools (
     has_timer boolean DEFAULT false NOT NULL,
     has_uv_treatment boolean DEFAULT false NOT NULL
 );
-
-
-ALTER TABLE public.pools OWNER TO postgres;
-
---
--- TOC entry 215 (class 1259 OID 25921)
--- Name: pools_pool_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
---
-
-ALTER TABLE public.pools ALTER COLUMN pool_id ADD GENERATED ALWAYS AS IDENTITY (
-    SEQUENCE NAME public.pools_pool_id_seq
-    START WITH 1
-    INCREMENT BY 1
-    NO MINVALUE
-    NO MAXVALUE
-    CACHE 1
-);
-
-
 --
 -- TOC entry 218 (class 1259 OID 25946)
 -- Name: services; Type: TABLE; Schema: public; Owner: postgres

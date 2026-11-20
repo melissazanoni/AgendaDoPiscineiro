@@ -4,7 +4,10 @@ import { Alert, Loading } from '../../components/ui';
 import { useSubmit } from '../../hooks/useForm';
 import { useFlash } from '../../hooks/useFlash';
 import { useLoad } from '../../hooks/useLoad';
-import { FREQUENCY_LABELS, STATUS_LABELS, formatDate, plural, todayIso } from '../../utils/format';
+import {
+  FILTER_MAINTENANCE, FILTER_TYPE_LABELS, FREQUENCY_LABELS, STATUS_LABELS,
+  formatDate, plural, todayIso,
+} from '../../utils/format';
 
 /** Figma: "2.1.3 - Detalhes" (RN02, RN05) */
 export function ServiceDetailsPage() {
@@ -24,6 +27,7 @@ export function ServiceDetailsPage() {
     );
   }
 
+  const filterType = service.filter_type ?? 'areia';
   const isScheduled = service.status === 'agendado';
   const isFuture = service.scheduled_date > todayIso();
 
@@ -54,6 +58,10 @@ export function ServiceDetailsPage() {
           <div>
             <dt>Piscina</dt>
             <dd>{service.pool_description}</dd>
+          </div>
+          <div>
+            <dt>Sistema de filtragem</dt>
+            <dd>{FILTER_TYPE_LABELS[filterType]}</dd>
           </div>
           <div>
             <dt>Data</dt>
@@ -91,6 +99,11 @@ export function ServiceDetailsPage() {
           </div>
         </dl>
       </section>
+
+      <div className="alert alert--info" style={{ marginTop: 20 }}>
+        <strong>Rotina do filtro ({FILTER_TYPE_LABELS[filterType]}):</strong>{' '}
+        {FILTER_MAINTENANCE[filterType].routine}
+      </div>
 
       <div style={{ marginTop: 24 }}><Alert>{action.error}</Alert></div>
 

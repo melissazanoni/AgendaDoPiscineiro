@@ -1,11 +1,12 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { customersApi, poolsApi, type PoolInput } from '../../api/endpoints';
-import type { CustomerType, PoolFeatures, PoolType } from '../../api/types';
+import type { CustomerType, FilterType, PoolFeatures, PoolType } from '../../api/types';
 import { Alert, DateField, Field, Loading, RadioGroup, SelectField } from '../../components/ui';
 import { useSubmit } from '../../hooks/useForm';
 import {
-  CUSTOMER_TYPE_LABELS, POOL_TYPE_LABELS, formatDecimal, parseDecimal, todayIso,
+  CUSTOMER_TYPE_LABELS, FILTER_MAINTENANCE, FILTER_TYPE_LABELS, POOL_TYPE_LABELS,
+  formatDecimal, parseDecimal, todayIso,
 } from '../../utils/format';
 
 const FEATURES: { key: keyof PoolFeatures; label: string }[] = [
@@ -36,6 +37,7 @@ export function PoolFormPage() {
   const [customerName, setCustomerName] = useState('');
   const [description, setDescription] = useState('');
   const [poolType, setPoolType] = useState<PoolType | ''>('');
+  const [filterType, setFilterType] = useState<FilterType>('areia');
   const [features, setFeatures] = useState<PoolFeatures>(NO_FEATURES);
   const [length, setLength] = useState('');
   const [width, setWidth] = useState('');
@@ -61,6 +63,7 @@ export function PoolFormPage() {
           setCustomerName(p.customer_name);
           setDescription(p.description);
           setPoolType(p.pool_type);
+          setFilterType(p.filter_type ?? 'areia');
           setFeatures(Object.fromEntries(FEATURES.map((f) => [f.key, p[f.key]])) as PoolFeatures);
           setLength(formatDecimal(p.length));
           setWidth(formatDecimal(p.width));
@@ -86,7 +89,6 @@ export function PoolFormPage() {
     })();
   }, [editId]);
 
-  // Volume calculado pelas medidas (mostrado como sugestão no campo Volume)
   const l = parseDecimal(length), w = parseDecimal(width), d = parseDecimal(depth);
   const computedVolume = l && w && d ? Math.round(l * w * d * 100) / 100 : null;
 
@@ -103,6 +105,7 @@ export function PoolFormPage() {
     const data: PoolInput = {
       description,
       pool_type: poolType as PoolType,
+      filter_type: filterType,
       customer_type: customerType as CustomerType,
       ...features,
       length: l,
@@ -157,6 +160,19 @@ export function PoolFormPage() {
         </fieldset>
 
         <fieldset className="fieldset">
+          <legend className="section-title">Tipo de filtro</legend>
+          <div className="check-grid">
+            {(Object.keys(FILTER_TYPE_LABELS) as FilterType[]).map((ft) => (
+              <label key={ft} className="check">
+                <input type="radio" name="filter_type" checked={filterType === ft} onChange={() => setFilterType(ft)} />
+                {FILTER_TYPE_LABELS[ft]}
+              </label>
+            ))}
+          </div>
+          {f.filter_type && <span className="field-error">{f.filter_type}</span>}
+        </fieldset>
+
+        <fieldset className="fieldset">
           <legend className="section-title">Recursos da piscina</legend>
           <div className="check-grid">
             {FEATURES.map((feat) => (
@@ -194,8 +210,7 @@ export function PoolFormPage() {
           value={customerType} onChange={(e) => setCustomerType(e.target.value as CustomerType)} error={f.customer_type}
           options={Object.entries(CUSTOMER_TYPE_LABELS).map(([value, label]) => ({ value, label }))}
         />
-
-        <DateField label="Última troca de areia" name="last_sand_change" max={todayIso()}
+        <DateField label={FILTER_MAINTENANCE[filterType].changeLabel} name="last_sand_change" max={todayIso()}
           value={sandChange} onChange={setSandChange} error={f.last_sand_change} />
 
         <div className="form-section">

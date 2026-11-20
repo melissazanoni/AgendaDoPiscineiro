@@ -1,7 +1,7 @@
 // Uma função para cada rota da API usada pelas telas.
 import { api, query } from './client';
 import type {
-  Address, Charge, ChargeFrequency, ChargeSummary, Customer, CustomerType, DocumentType,
+  Address, Charge, ChargeFrequency, ChargeSummary, Customer, CustomerType, DocumentType, FilterType,
   PaymentStatus, Pool, PoolFeatures, PoolType, Service, ServiceFrequency, ServiceStatus, User,
 } from './types';
 
@@ -41,6 +41,7 @@ export const customersApi = {
 export type PoolInput = PoolFeatures & {
   description: string;
   pool_type: PoolType;
+  filter_type: FilterType;
   customer_type: CustomerType;
   width: number | null;
   length: number | null;

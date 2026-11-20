@@ -4,6 +4,7 @@ import { dateString, idSchema } from '../../utils/validation';
 import { addressSchema } from '../addresses/address.schemas';
 
 export const POOL_TYPES = ['fibra', 'vinil', 'alvenaria', 'azulejo', 'pastilha'] as const;
+export const FILTER_TYPES = ['areia', 'zeolita', 'cartucho', 'bag', 'diatomita'] as const;
 export const CUSTOMER_TYPES = [
   'residencia', 'condominio', 'sitio ou chacara', 'clube', 'hoteis e resorts', 'academias',
 ] as const;
@@ -14,6 +15,7 @@ const flag = z.boolean().default(false);
 const poolFields = {
   description: z.string().trim().min(1).max(255),
   pool_type: z.enum(POOL_TYPES),
+  filter_type: z.enum(FILTER_TYPES).default('areia'),
   customer_type: z.enum(CUSTOMER_TYPES),
   width: measure,
   length: measure,
@@ -54,7 +56,11 @@ function checkPool(data: PoolBase, ctx: z.RefinementCtx) {
     });
   }
   if (data.last_sand_change && data.last_sand_change > today()) {
-    ctx.addIssue({ code: 'custom', path: ['last_sand_change'], message: 'A data da troca de areia não pode ser futura.' });
+    ctx.addIssue({
+      code: 'custom',
+      path: ['last_sand_change'],
+      message: 'A data da última troca do elemento filtrante não pode ser futura.',
+    });
   }
 }
 

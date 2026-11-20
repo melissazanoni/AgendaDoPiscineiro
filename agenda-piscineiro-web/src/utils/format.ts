@@ -1,5 +1,5 @@
 // Funções de formatação (datas, dinheiro, documentos) usadas pelas telas.
-import type { CustomerType, PoolType, ServiceFrequency, ServiceStatus } from '../api/types';
+import type { CustomerType, FilterType, PoolType, ServiceFrequency, ServiceStatus } from '../api/types';
 
 // ---------- Datas (sempre no formato da API: 'AAAA-MM-DD') ----------
 const pad = (n: number) => String(n).padStart(2, '0');
@@ -135,3 +135,60 @@ export const FREQUENCY_LABELS: Record<ServiceFrequency, string> = {
 
 export const plural = (n: number, singular: string, pluralForm: string) =>
   `${n} ${n === 1 ? singular : pluralForm}`;
+
+export const FILTER_TYPE_LABELS: Record<FilterType, string> = {
+  areia: 'Areia',
+  zeolita: 'Zeólita',
+  cartucho: 'Cartucho (Refil)',
+  bag: 'Bag (Bolsa)',
+  diatomita: 'Diatomita',
+};
+
+export const FILTER_MAINTENANCE: Record<FilterType, {
+  changeLabel: string;
+  maxMonths: number | null;
+  validityText: string;
+  routine: string;
+}> = {
+  areia: {
+    changeLabel: 'Última troca da areia',
+    maxMonths: 24,
+    validityText: '2 a 3 anos',
+    routine: 'Retrolavagem (Lavar) semanal ou +5 a 10 psi no manômetro + Enxágue por 30s. Troca da areia a cada 2 a 3 anos.',
+  },
+  zeolita: {
+    changeLabel: 'Última troca da zeólita',
+    maxMonths: 36,
+    validityText: '3 a 5 anos',
+    routine: 'Retrolavagem (Lavar) semanal ou +5 a 10 psi no manômetro + Enxágue por 30s. Troca da zeólita a cada 3 a 5 anos.',
+  },
+  cartucho: {
+    changeLabel: 'Última troca do refil (cartucho)',
+    maxMonths: 6,
+    validityText: '6 a 12 meses',
+    routine: 'Retirar o refil e lavar entre as dobras com mangueira (sem alta pressão); desengordurar a cada 1–2 meses. Troca a cada 6 a 12 meses.',
+  },
+  bag: {
+    changeLabel: 'Última troca da bolsa (bag)',
+    maxMonths: 6,
+    validityText: '6 a 12 meses',
+    routine: 'Retirar a bolsa filtrante e lavar com mangueira a cada visita. Troca a cada 6 a 12 meses ou se houver desgaste.',
+  },
+  diatomita: {
+    changeLabel: 'Última troca das grades (opcional)',
+    maxMonths: null,
+    validityText: 'Apenas se rasgar ou empenar',
+    routine: 'Retrolavagem ao subir a pressão + reposição imediata do pó de diatomita pelo skimmer. Limpeza profunda das grades 1 a 2x/ano.',
+  },
+};
+
+export function getFilterReplacementStatus(type: FilterType, lastChangeIso: string | null): string {
+  const info = FILTER_MAINTENANCE[type];
+  if (!lastChangeIso) return `Troca: não informada (vida útil: ${info.validityText})`;
+  if (!info.maxMonths) return `Última troca das grades: ${formatDate(lastChangeIso)}`;
+
+  const [y, m, d] = lastChangeIso.split('-').map(Number);
+  const dueDate = new Date(y, m - 1 + info.maxMonths, d);
+  const overdue = new Date() > dueDate;
+  return `Última troca: ${formatDate(lastChangeIso)} (${overdue ? 'avaliar substituição' : 'dentro do prazo'})`;
+}

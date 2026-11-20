@@ -5,7 +5,9 @@ import { Alert, Empty, Loading } from '../../components/ui';
 import { useSubmit } from '../../hooks/useForm';
 import { useFlash } from '../../hooks/useFlash';
 import { useLoad } from '../../hooks/useLoad';
-import { POOL_TYPE_LABELS, formatDecimal, formatDocument } from '../../utils/format';
+import {
+  FILTER_TYPE_LABELS, POOL_TYPE_LABELS, formatDecimal, formatDocument, getFilterReplacementStatus,
+} from '../../utils/format';
 
 /** Figma: "2.2.2 - Dados Cliente" */
 export function CustomerDetailsPage() {
@@ -85,36 +87,40 @@ export function CustomerDetailsPage() {
         ) : pools.data?.length === 0 ? (
           <Empty>Nenhuma piscina cadastrada para este cliente.</Empty>
         ) : (
-          pools.data?.map((p, index) => (
-            <article key={p.pool_id} className="card pool-card">
-              <span className="pool-card__index">{String(index + 1).padStart(2, '0')}</span>
-              <div className="pool-card__body">
-                <h3 className="pool-card__title">{p.description}</h3>
-                <p className="pool-card__address">
-                  {p.uses_customer_address
-                    ? 'Endereço Padrão'
-                    : `Endereço alternativo: ${p.address.street}${p.address.number ? `, ${p.address.number}` : ''}`}
-                </p>
-                <div className="pool-card__specs">
-                  <span>Tipo: {POOL_TYPE_LABELS[p.pool_type]}</span>
-                  {p.length !== null && p.width !== null && (
-                    <span>Tamanho: {formatDecimal(p.length)} × {formatDecimal(p.width)} m</span>
-                  )}
-                  {p.depth !== null && <span>Profundidade: {formatDecimal(p.depth)} m</span>}
-                  {p.volume !== null && <span>Volume: {formatDecimal(p.volume)} m³</span>}
+          pools.data?.map((p, index) => {
+            const filterType = p.filter_type ?? 'areia';
+            return (
+              <article key={p.pool_id} className="card pool-card">
+                <span className="pool-card__index">{String(index + 1).padStart(2, '0')}</span>
+                <div className="pool-card__body">
+                  <h3 className="pool-card__title">{p.description}</h3>
+                  <p className="pool-card__address">
+                    {p.uses_customer_address
+                      ? 'Endereço Padrão'
+                      : `Endereço alternativo: ${p.address.street}${p.address.number ? `, ${p.address.number}` : ''}`}
+                  </p>
+                  <div className="pool-card__specs">
+                    <span>Tipo: {POOL_TYPE_LABELS[p.pool_type]} · Filtro: {FILTER_TYPE_LABELS[filterType]}</span>
+                    {p.length !== null && p.width !== null && (
+                      <span>Tamanho: {formatDecimal(p.length)} × {formatDecimal(p.width)} m</span>
+                    )}
+                    {p.depth !== null && <span>Profundidade: {formatDecimal(p.depth)} m</span>}
+                    {p.volume !== null && <span>Volume: {formatDecimal(p.volume)} m³</span>}
+                    <span>{getFilterReplacementStatus(filterType, p.last_sand_change)}</span>
+                  </div>
                 </div>
-              </div>
-              <div className="pool-card__actions">
-                <button type="button" className="btn btn--outline-danger" style={{ width: 140, borderRadius: 10 }}
-                  onClick={() => removePool(p)} disabled={action.submitting}>
-                  Excluir piscina
-                </button>
-                <Link to={`/piscinas/${p.pool_id}/editar`} className="btn btn--white" style={{ width: 140, borderRadius: 12 }}>
-                  Editar piscina
-                </Link>
-              </div>
-            </article>
-          ))
+                <div className="pool-card__actions">
+                  <button type="button" className="btn btn--outline-danger" style={{ width: 140, borderRadius: 10 }}
+                    onClick={() => removePool(p)} disabled={action.submitting}>
+                    Excluir piscina
+                  </button>
+                  <Link to={`/piscinas/${p.pool_id}/editar`} className="btn btn--white" style={{ width: 140, borderRadius: 12 }}>
+                    Editar piscina
+                  </Link>
+                </div>
+              </article>
+            );
+          })
         )}
       </div>
 
